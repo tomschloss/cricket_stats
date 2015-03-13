@@ -21,7 +21,7 @@ library(rvest)
 library(stringr)
 library(dplyr)
 
-setwd("~/Repositories/cricket_stats/RProject")
+setwd("~/Repositories/cricketR/RProject")
 
 ## Global constants ----
 # Calculate number of pages (this is a little inefficient - something to improve)
