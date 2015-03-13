@@ -1,7 +1,7 @@
 ## ESPN cricket stats html scrape
 
 ## Author:  Tom Schlosser
-## Version: 1.0
+## Version: 1.0.1
 ## Date:    11 March 2015
 
 ## Description
@@ -15,21 +15,44 @@
 ## Set-up ----
 
 require(checkpoint)
-checkpoint("2015-03-01")
+#checkpoint("2015-03-01")
 
 library(rvest)
+library(stringr)
 library(dplyr)
-library(tcltk)
 
-setwd("~/Repositories/cricket_stats/RProj")
+setwd("~/Repositories/cricket_stats/RProject")
 
 ## Global constants ----
-totl_pages <- 417 # as at 2015-03-11
+# Calculate number of pages (this is a little inefficient - something to improve)
+# Create html
+cricinfo_html <- paste0(
+  "http://stats.espncricinfo.com/ci/engine/stats/index.html?class=11;",
+  "filter=advanced;",
+  "orderby=runs;",
+  "page=",1,";",
+  "size=200;", 
+  "spanmin1=01+Dec+1999;", 
+  "spanval1=span;", 
+  "template=results;", 
+  "type=batting;",
+  "view=innings"
+)
+# Scrape data from html table
+cricpg <- html(cricinfo_html)
+
+numberOfRecords <- cricpg %>% html_nodes(xpath="//*[contains(concat( \" \", @class, \" \" ), concat( \" \", \"left\", \" \" )) and (((count(preceding-sibling::*) + 1) = 2) and parent::*)] | //*[(((count(preceding-sibling::*) + 1) = 6) and parent::*)]//*[contains(concat( \" \", @class, \" \" ), concat( \" \", \"left\", \" \" ))]//*[(((count(preceding-sibling::*) + 1) = 6) and parent::*)]//b") %>% html_text()
+numberOfRecords <- as.integer(str_trim(str_sub(numberOfRecords, 
+                                               start = str_locate(numberOfRecords, " of ") + 4
+                                               )
+                                       )[1]
+)
+
+totl_pages = ceiling(numberOfRecords / 200)
 
 ## Initialise variables ----
 a <- Sys.time()
-pb <- tkProgressBar(title = "Progress bar", min = 0,
-                    max = totl_pages, width = 300)
+pb <- txtProgressBar(min = 0, max = totl_pages, style = 3)
 timings <- matrix(NA, nrow = totl_pages, ncol = 4)
 
 cric <- data.frame(Player = as.character("string"), 
@@ -51,12 +74,7 @@ for (i in 1:totl_pages) {
   timings[i, 2] = Sys.time()
   # Initialise progress bar
   Sys.sleep(0.1)
-  setTkProgressBar(pb, i, label=paste(round(i/totl_pages*100, 0),
-                                       "% done. ",
-                                       totl_pages - i,
-                                       " page(s) remaining."
-                                      )
-  )
+  setTxtProgressBar(pb, i)
   # Create html
   cricinfo_html <- paste0(
                           "http://stats.espncricinfo.com/ci/engine/stats/index.html?class=11;",
@@ -83,7 +101,7 @@ for (i in 1:totl_pages) {
                                BF = ifelse(X4 == "-", NA, as.integer(X4)),
                                fours = ifelse(X5 == "-", NA, as.integer(X5)),
                                sixes = ifelse(X6 == "-", NA, as.integer(X6)),
-                               SR = ifelse(X7 == "-", NA, as.integer(X7)),
+                               SR = ifelse(X7 == "-", NA, as.double(X7)),
                                Inns = as.integer(X8),
                                blank1 = X9,
                                Opp = as.character(X10),
@@ -105,10 +123,12 @@ cric <- cric %>% select(-blank1, -blank2)
 b <- Sys.time()
 runTime <- b - a
 runTime
+numberOfRecords
+totl_pages
 
 ## Output ----
 write.csv(cric, 
-          "cric.csv", 
+          "cric_new.csv", 
           row.names = FALSE
           )
 
