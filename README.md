@@ -1,4 +1,4 @@
-# cricket_stats
+# cricketR
 
 ## Aims
 * Scrape data from stats.espncricinfo.com since the Australian summer of 1999.
