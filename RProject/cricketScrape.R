@@ -1,7 +1,7 @@
 ## ESPN cricket stats html scrape
 
 ## Author:  Tom Schlosser
-## Version: 1.0.1
+## Version: 1.0.2
 ## Date:    11 March 2015
 
 ## Description
@@ -57,13 +57,16 @@ timings <- matrix(NA, nrow = totl_pages, ncol = 4)
 
 cric <- data.frame(Player = as.character("string"), 
                    Runs = as.character("string"), 
-                   Mins = 0, BF = 0, 
-                   fours = 0, sixes = 0, SR = 0.00, 
-                   Inns = 0, 
-                   blank1 = 0,
+                   Mins = as.character(0), 
+                   BF = as.character(0), 
+                   fours = as.character(0), 
+                   sixes = as.character(0), 
+                   SR = as.character(0), 
+                   Inns = as.character(0), 
+                   blank1 = as.character(0),
                    Opp = as.character("string"), Ground = as.character("string"), 
-                   Start.Date = as.Date("01 Jan 2001", "%d %b %Y"),
-                   blank2 = 0,
+                   Start.Date = as.character("01 Jan 2001"),
+                   blank2 = as.character(0),
                    pageNumber = 0
                    )
 
@@ -74,7 +77,7 @@ for (i in 1:totl_pages) {
   timings[i, 2] = Sys.time()
   # Initialise progress bar
   Sys.sleep(0.1)
-  setTxtProgressBar(pb, i)
+  setTxtProgressBar(pb, i - 1)
   # Create html
   cricinfo_html <- paste0(
                           "http://stats.espncricinfo.com/ci/engine/stats/index.html?class=11;",
@@ -97,16 +100,16 @@ for (i in 1:totl_pages) {
     # Recode variable names and apply variable type
                                Player = as.character(X1),
                                Runs = as.character(X2),
-                               Mins = ifelse(X3 == "-", NA, as.integer(X3)),
-                               BF = ifelse(X4 == "-", NA, as.integer(X4)),
-                               fours = ifelse(X5 == "-", NA, as.integer(X5)),
-                               sixes = ifelse(X6 == "-", NA, as.integer(X6)),
-                               SR = ifelse(X7 == "-", NA, as.double(X7)),
-                               Inns = as.integer(X8),
+                               Mins = as.character(X3),
+                               BF = as.character(X4),
+                               fours = as.character(X5),
+                               sixes = as.character(X6),
+                               SR = as.character(X7),
+                               Inns = as.character(X8),
                                blank1 = X9,
                                Opp = as.character(X10),
                                Ground = as.character(X11),
-                               Start.Date = as.Date(X12, "%d %b %Y"),
+                               Start.Date = as.character(X12),
                                blank2 = X13,
                                pageNumber = as.integer(pageNumber)
                                )
@@ -131,6 +134,10 @@ write.csv(cric,
           "cric_new.csv", 
           row.names = FALSE
           )
+
+# Complete progress bar
+Sys.sleep(0.1)
+setTxtProgressBar(pb, i)
 
 ## Clear memory ----
 close(pb)
